@@ -1,2 +1,2 @@
-# whiterockgaming.github.io
-It's a webpage! hello world!
+# rutes.github.io
+It's a simple webpage! hello world!
