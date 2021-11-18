@@ -1,4 +1,2 @@
-# WhiteRockGaming
-Rutes' Hello-World Repository
-
-oh cool I'm making edits
+# whiterockgaming.github.io
+It's a webpage! hello world!
