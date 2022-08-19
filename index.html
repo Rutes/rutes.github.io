@@ -24,6 +24,7 @@
 		<link rel="stylesheet" href="css/font-awesome.css">
 		<link rel="stylesheet" href="css/flexslider.css">
 		<link rel="stylesheet" href="css/meflat-blue.css">
+        <link rel="sytlesheet" href="css/style-switcher.css">
 
 
 		<!-- ==============================================
@@ -95,7 +96,11 @@ MAIN NAV
 					Contact Me
 					</a>
 				</li>
+                <li>
+                    <img src="assets/moon.png" id="themechanger">
+                </li>
 			</ul>
+            
 		</div><!--End navbar-collapse -->
 
 	</div><!--End container -->
@@ -465,6 +470,18 @@ valheim
 		<script src="js/jquery.easypiechart.js"></script>
 		<script src="js/contact.js"></script>
 		<script src="js/meflat.js"></script>
+        <script>
+            var themechanger = document.getElementById("themechanger");
+            themechanger.onclick = function(){
+                document.body.classList.toggle("dark-theme");
+                if(document.body.classList.contains("dark-theme")){
+                    themechanger.src = "assets/sun.png";
+                }else{
+                    themechanger.src = "assets/moon.png";
+                }
+                    
+            }
+        </script>
 
 	</body>
 
