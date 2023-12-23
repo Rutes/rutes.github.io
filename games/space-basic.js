@@ -134,10 +134,10 @@ function handleShipAsteroidCollision(ship, asteroid) {
 function updateShip() {
     // don't allow ship control or collisions while it is exploding
     if (ship.isExploding === false) {
-        if (keyIsDown(KEY.RIGHT_ARROW || KEY.D)) {
+        if (keyIsDown(KEY.D)) {
             ship.centerX += 10;
         }
-        if (keyIsDown(KEY.LEFT_ARROW || KEY.A)) {
+        if (keyIsDown(KEY.A)) {
             ship.centerX -= 10;
         }
 
