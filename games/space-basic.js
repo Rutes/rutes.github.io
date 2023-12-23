@@ -1,5 +1,5 @@
-let screenWidth = 600;
-const screenHeight = 800;
+let screenWidth = 800;
+const screenHeight = 600;
 
 let assets = {};
 
@@ -130,13 +130,14 @@ function handleShipAsteroidCollision(ship, asteroid) {
     }
 }
 
+
 function updateShip() {
     // don't allow ship control or collisions while it is exploding
     if (ship.isExploding === false) {
-        if (keyIsDown(KEY.RIGHT_ARROW)) {
+        if (keyIsDown(KEY.RIGHT_ARROW || KEY.D)) {
             ship.centerX += 10;
         }
-        if (keyIsDown(KEY.LEFT_ARROW)) {
+        if (keyIsDown(KEY.LEFT_ARROW || KEY.A)) {
             ship.centerX -= 10;
         }
 
