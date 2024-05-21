@@ -1,4 +1,4 @@
-let screenWidth = 1024;
+let screenWidth = 800;
 let screenHeight = 600;
 
 let assets = {};
@@ -19,7 +19,6 @@ let ACCELERATION = 1.5;
 let JUMP_FORCE = 12;
 
 function preload() {
-    // starting sprite images
     assets.background = loadImage("assets/Background/sky_cloud.png");
     
     // Note: you will also need to customize your player's collider box in the createPlayer() function
@@ -44,7 +43,7 @@ function createPlatform(x, y) {
 function createPlayer() {
   // Create the player sprite, add animations, and position on screen
   player = createSprite(assets.playerStanding);
-  player.addImage("jumping", assets.playerJumping);
+  player.addAnimation("jumping", assets.playerJumping);
   player.addAnimation("walking", assets.playerWalking);
   player.centerX = 300;
   player.centerY = 300;
@@ -189,11 +188,6 @@ function updateCamera() {
   //camera.position.y = player.centerY;
 }
 
-function drawScoreBoard() {
-    textSize(24);
-    fill("white");
-    text(`Score: ${score} / Lives: ${lives}`, 24, 40);
-}
 
 
 function draw() {
@@ -202,6 +196,5 @@ function draw() {
     updatePlayerAppearance();
     updateCamera();
     drawSprites();
-    drawScoreBoard();
 }
 
