@@ -3,8 +3,8 @@ let screenHeight = 600;
 
 let assets = {};
 
-let viking;
-
+let platforms;
+let player;
 
 
 let score = 0;
@@ -12,178 +12,181 @@ let lives = 3;
 let gameOver = false;
 let gameStart = false;
 
-let gravity = 4;
+// physics settings
+let GRAVITY = 0.5;
+let RESISTANCE = 0.8;
+let ACCELERATION = 1.5;
+let JUMP_FORCE = 12;
 
 function preload() {
     // starting sprite images
-    assets.viking = loadImage("assets/viking/walk_1.png")
-    assets.bigAsteroid = loadImage("assets/spaceShooter/asteroid_big1.png");
-    assets.laser = loadImage("assets/spaceShooter/laserBlue02.png");
     assets.background = loadImage("assets/Background/sky_cloud.png");
     
-    // animations
-    assets.vikingReady = loadAnimation(
-        "assets/viking/ready_1.png", "assets/viking/ready_6.png");
-    assets.vikingWalking = loadAnimation(
-        "assets/viking/walk_1.png", "assets/viking/walk_6.png");
-    assets.vikingJumping = loadAnimation(
-        "assets/viking/jump_1.png", "assets/viking/jump_5.png");
-    assets.vikingDeath = loadAnimation(
-        "assets/viking/dead_1.png", 
-        "assets/viking/dead_1.png", 
-        "assets/viking/dead_1.png", 
-        "assets/viking/dead_2.png", 
-        "assets/viking/dead_2.png", 
-        "assets/viking/dead_1.png", 
-        "assets/viking/dead_2.png", 
-        "assets/viking/dead_2.png", 
-        "assets/viking/dead_4.png",
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png",
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png",
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png", 
-        "assets/viking/dead_4.png",
-        "assets/viking/dead_4.png");
-  
-    // sounds
-    //assets.laserSound = loadSound("assets/spaceShooter/laser.wav");
-    //assets.regularExplosionSound = loadSound("assets/spaceShooter/regular-explosion.wav");
-    //assets.bigExplosionSound = loadSound("assets/spaceShooter/big-explosion.wav");
+    // Note: you will also need to customize your player's collider box in the createPlayer() function
+    assets.playerStanding = loadImage("assets/viking/ready_6.png")
+    assets.playerWalking = loadAnimation("assets/viking/walk_1.png", "assets/viking/walk_6.png")
+    assets.playerJumping = loadAnimation("assets/viking/jump_1.png", "assets/viking/jump_5.png");
+    
+    assets.platform = loadImage("assets/platformer/platform.png");
 }
+
+function createPlatform(x, y) {
+  // Create a platform and position at the given x/y coordinates
+  let platform = createSprite(assets.platform);
+  platform.centerX = x;
+  platform.centerY = y;
+
+  // Add the created platform to the `platforms` group
+  platforms.add(platform);
+}
+
+
+function createPlayer() {
+  // Create the player sprite, add animations, and position on screen
+  player = createSprite(assets.playerStanding);
+  player.addImage("jumping", assets.playerJumping);
+  player.addAnimation("walking", assets.playerWalking);
+  player.centerX = 300;
+  player.centerY = 300;
+
+  // The player images (stand/jump/walk) are different sizes, which can make
+  // collision checking more difficult. To make this easier, we define our
+  // own collider box.
+  player.setCollider("rectangle", 0, 0, 46, 92);
+
+  // Set debug = true to show the player's collider box
+  player.debug = false;
+
+  // Add some custom properties on `player` to keep track of its physics:
+  player.horizontalSpeed = 0;   // change in X position each frame
+  player.verticalSpeed = 0;     // change in Y position each frame
+  player.airtime = 0;           // how long the player has been in the air
+}
+
 
 
 function setup() {
-    createCanvas(screenWidth, screenHeight);
-    
-    viking = createSprite(assets.viking);
-    viking.scale = 3;
-    viking.bottom = screenHeight/2;
-    viking.centerX = 100;
-    viking.setSpeed(gravity);
-    viking.setDirection(90);
-    
-    viking.setCollider("rectangle");
-    
-    viking.addAnimation("idle", assets.vikingReady);
-    viking.addAnimation("walking", assets.vikingWalking);
-    viking.addAnimation("jumping", assets.vikingJumping);
-    viking.addAnimation("dying", assets.vikingDeath);
+  createCanvas(screenWidth, screenHeight);
 
-    viking.isDying = false;
-    viking.isJumping = false;
-    
-    
-    // predefine sprite Groups
-    asteroids = createGroup();
-    stars = createGroup();
-    lasers = createGroup();
-} //end setup
+  // call createPlayer() which sets up the player sprite
+  createPlayer();
 
-function resetGame() {
-    score = 0;
-    lives = 3;
-    viking.centerX = screenWidth / 2;
-    viking.isReady = true;
-    asteroids.removeAll();
-} //end resetGame
+  // Turn on the camera so we can scroll
+  camera.on();
+  camera.position.x = player.centerX;
 
+  // create `platforms` sprite group (this makes collision detections easier)
+  platforms = createGroup();
 
-
-
-function vikingFinishedDying() {
-    viking.changeAnimation("idle");
-    viking.isDying = false;
-    viking.isReady = true;
-    lives--;
-    if (lives === 0) {
-        gameOver = true;
-    }
-}
-
-
-function updateViking() {
-    if (viking.isDying === false) {
-        
-        //movement
-        if (keyIsDown(KEY.D)) {
-            viking.isWalking = true;
-            viking.changeAnimation("walking");
-            viking.mirrorX(1);
-            viking.centerX += 10;
-        }
-        else {
-            viking.isWalking = false;
-            viking.changeAnimation("idle");
-        }
-        if (keyIsDown(KEY.A)) {
-            viking.changeAnimation("walking");
-            viking.mirrorX(-1);
-            viking.centerX -= 10;
-        }
-        else {
-            viking.isWalking = false;
-            viking.changeAnimation("idle");
-        }
-        //if (keyIsDown(KEY.W)) {
-        //    viking.bottom -= 10;
-        //}
-        //if (keyIsDown(KEY.S)) {
-        //    viking.bottom += 10;
-        //}
-
-        //jumping
-        if (keyWentDown(KEY.SPACE)) {
-            viking.changeAnimation("jumping");
-            viking.setSpeed(0);
-            viking.bottom -= 100;
-        }
-
-
-        //prevent going off-screen
-        if (viking.left < 0) {
-            viking.left = 0;
-        }
-        if (viking.right > screenWidth) {
-            viking.right = screenWidth;
-        }
-        if (viking.top < 0) {
-            viking.top = 0;
-        }
-        if (viking.bottom > screenHeight - 100) {
-            viking.bottom = screenHeight - 100;
-        }
-
-        viking.overlap(asteroids, handleVikingAsteroidCollision);
-    }
+  // call createPlatform() which also adds the created sprite to the group
+  createPlatform(300, 460);
+  createPlatform(450, 350);
+  createPlatform(600, 460);
+  createPlatform(810, 460);
 }
 
 
 
-function cooldown(milliseconds) {
-   var start = new Date().getTime();
-   for (var i = 0; i < 1e7; i++) {
-     if ((new Date().getTime() - start) > milliseconds){
-       break;
-     }
-   }
+function updatePlayerMovement() {
+  /*
+  For proper collision handling with our platforms, it's important to
+  perform the following steps in order:
+
+  1. Update horizontal/vertical speed when control keys are pressed
+  2. Apply gravity and resistance
+  3. Update horizontal position
+  4. If touching a platform, stop horizontal movement
+  5. Update vertical position
+  6. If touching a platform, stop vertical movement
+
+  It's important to update horizontal position and collision-checking
+  BEFORE updating vertical movement. Otherwise the sprite will get "stuck"
+  inside the platform.
+  */
+
+  // Step 1: Update horizontal/vertical speed when control keys are pressed
+  if (keyIsDown(KEY.D)) {
+    player.horizontalSpeed += ACCELERATION;
+  }
+  if (keyIsDown(KEY.A)) {
+    player.horizontalSpeed -= ACCELERATION;
+  }
+  if (keyIsDown(KEY.SPACE) && player.airtime === 0) {
+    player.verticalSpeed -= JUMP_FORCE;
+  }
+
+  // Step 2: apply gravity & resistance
+  player.verticalSpeed += GRAVITY;
+  player.horizontalSpeed *= RESISTANCE;
+
+  // If horizontal speed is less than 1, set it to 0 to fully stop the player.
+  // We use Math.abs() to get the absolute value, since it could be negative.
+  if (Math.abs(player.horizontalSpeed) < 1) {
+    player.horizontalSpeed = 0;
+  }
+
+  // Step 3: Update horizontal movement
+  player.lastX = player.centerX;
+  player.centerX += player.horizontalSpeed;
+
+  // Step 4: If we're touching a platform, move sprite back to last
+  //         X position and stop horizontal movement.
+  if (player.isTouching(platforms)) {
+    player.centerX = player.lastX;
+    player.horizontalSpeed = 0;
+  }
+
+  // Step 5: Update vertical movement and check for platform collision
+  player.airtime += 1;
+  player.lastY = player.centerY;
+  player.centerY += player.verticalSpeed;
+
+  // Step 6: If we're touching a platform, move sprite back to last
+  //         Y position and stop vertical movement.
+  if (player.isTouching(platforms)) {
+    player.centerY = player.lastY;
+    player.verticalSpeed = 0;
+    player.airtime = 0;
+  }
 }
 
 
+function updatePlayerAppearance() {
+  // Here we update the player's image/animation depending on its current state
+  if (player.airtime > 0) {
+    // If the player is in the air, use the jumping animation
+    player.changeAnimation("jumping");
+  } else if (player.horizontalSpeed !== 0) {
+    // Otherwise, if the player has horizontal speed, use the walking animation
+    player.changeAnimation("walking");
+  } else {
+    // Otherwise, use the normal (default) animation.
+    player.changeAnimation("normal");
+  }
 
-function updateAsteroids() {
-    if (frameCount % 60 === 0) {
-        createAsteroid();
-    }
-    for (let asteroid of asteroids) {
-        if (asteroid.top > screenHeight) {
-            asteroid.remove();
-        }
-    }
+  // Flip the sprite horizontally depending on our movement
+  if (player.horizontalSpeed > 0) {
+    player.mirrorX(1);
+  } else if (player.horizontalSpeed < 0) {
+    player.mirrorX(-1);
+  }
+}
+
+function updateCamera() {
+  /*
+  Here we implement the simplest form of camera movement: player-locked.
+  The camera is always positioned on the player.
+
+  See the following links for some great articles on camera movement in 2D platformers:
+
+  - https://www.samjhhu.com/2d-platformer-camera/
+  - http://www.imake-games.com/cameras-in-2d-platformers/
+  */
+
+  camera.position.x = player.centerX;
+
+  // if you have more height in your levels, you can also lock camera to the player vertically:
+  //camera.position.y = player.centerY;
 }
 
 function drawScoreBoard() {
@@ -192,55 +195,13 @@ function drawScoreBoard() {
     text(`Score: ${score} / Lives: ${lives}`, 24, 40);
 }
 
-function drawStartScreen() {
-  background("black");
-  textAlign(CENTER);
-  fill("white");
-  textSize(40);
-  text("Press SPACE to begin!", screenWidth/2, screenHeight/2 + 100);
-    
-  if (keyWentDown(KEY.SPACE)) {
-        resetGame();
-        gameOver = false;
-        gameStart = false;
-    }
-}
 
-function drawGameOverScreen() {
-    background("black");
-    textAlign(CENTER);
-    fill("white");
-    textSize(40);
-    text("GAME OVER", screenWidth/2, screenHeight/2);
-    textSize(20);
-    text("Press SPACE to try again!", screenWidth/2, screenHeight/2 + 100);
-    
-    if (keyWentDown(KEY.SPACE)) {
-        resetGame();
-        gameOver = false;
-    }
-}
-
-
-function drawGame() {
+function draw() {
     image(assets.background, 0, 0, screenWidth, screenHeight);
-
-    updateViking();
-    updateAsteroids();
-    updateLasers();
-    
+    updatePlayerMovement();
+    updatePlayerAppearance();
+    updateCamera();
     drawSprites();
     drawScoreBoard();
 }
 
-function draw() {
-  if (gameOver === true) {
-        drawGameOverScreen();  
-  } else if (gameStart === true) {
-        drawStartScreen();
-  } else {
-        drawGame();
-    }
-}
-
-//END
